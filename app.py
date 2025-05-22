@@ -28,7 +28,7 @@ def load_data():
 @st.cache_resource
 def load_vectorstore():
     embeddings = HuggingFaceEmbeddings()
-    return FAISS.load_local("vectorstore_db", embeddings)
+    return FAISS.load_local("vectorstore_db", embeddings, allow_dangerous_deserialization=True)
 
 dataframes, sheets = load_data()
 vectorstore = load_vectorstore()
