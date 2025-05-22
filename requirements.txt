@@ -1,0 +1,11 @@
+streamlit
+pandas
+openpyxl
+python-dotenv
+langchain==0.3.20
+langchain_openai==0.3.7
+langchain-community
+faiss-cpu
+tabulate
+huggingface-hub
+pydantic
