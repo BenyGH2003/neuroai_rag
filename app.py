@@ -348,7 +348,7 @@ def process_query(query):
 # --- Streamlit Chat UI ---
 
 st.set_page_config(page_title="NeuroAIHub Chat", layout="wide")
-st.title("🧠 NeuroAIHub: Neuroradiology Imaging Dataset Chat")
+st.title("🧠 NeuroAIHub: Neuroradiology Imaging Dataset Finder")
 
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
