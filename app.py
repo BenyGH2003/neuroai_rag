@@ -354,7 +354,7 @@ st.title("🧠 NeuroAIHub: Neuroradiology Imaging Dataset Finder")
 
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
-        {"role": "assistant", "content": "Hello! I'm NeuroAIHub, your assistant for exploring neuroradiology datasets. Ask me anything about datasets!"}
+        {"role": "assistant", "content": "Hello! I'm NeuroAIHub, your assistant for exploring neuroradiology datasets. Ask me anything about datasets and their characterizations!"}
     ]
 
 # Chat input
