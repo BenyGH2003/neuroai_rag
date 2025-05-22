@@ -347,29 +347,44 @@ def process_query(query):
 
 # --- Streamlit Chat UI ---
 
+# --- Streamlit Chat UI ---
+
 st.set_page_config(page_title="NeuroAIHub Chat", layout="wide")
 st.title("🧠 NeuroAIHub: Neuroradiology Imaging Dataset Finder")
 
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
-        {"role": "assistant", "content": "Hello! I'm NeuroAIHub, your assistant for exploring neuroradiology datasets. Ask me anything!"}
+        {"role": "assistant", "content": "Hello! I'm NeuroAIHub, your assistant for exploring neuroradiology datasets. Ask me anything about datasets!"}
     ]
 
-# Display chat history
-for msg in st.session_state.chat_history:
-    if msg["role"] == "user":
-        st.chat_message("user").markdown(msg["content"])
-    else:
-        st.chat_message("assistant").markdown(msg["content"])
+# Chat input
+user_input = st.chat_input("💬 Ask about neuroradiology datasets and their characterizations:")
 
-# User input in chat box
-if prompt := st.chat_input("💬 Ask about neuroradiology datasets and their characterizations:"):
-    st.session_state.chat_history.append({"role": "user", "content": prompt})
+if user_input:
+    # Append user message immediately so it shows in chat history
+    st.session_state.chat_history.append({"role": "user", "content": user_input})
 
+    # Render all chat messages including the new user message
+    for msg in st.session_state.chat_history:
+        if msg["role"] == "user":
+            st.chat_message("user").markdown(msg["content"])
+        else:
+            st.chat_message("assistant").markdown(msg["content"])
+
+    # Generate assistant response
     with st.chat_message("assistant"):
         with st.spinner("🔍 Searching..."):
-            answer_text, answer_table = process_query(prompt)
+            answer_text, answer_table = process_query(user_input)
             full_response = f"{answer_text}\n\n**Relevant Datasets:**\n```\n{answer_table}\n```"
 
         st.markdown(full_response)
+        # Append assistant response to chat history
         st.session_state.chat_history.append({"role": "assistant", "content": full_response})
+
+else:
+    # No new user input, just render existing chat history
+    for msg in st.session_state.chat_history:
+        if msg["role"] == "user":
+            st.chat_message("user").markdown(msg["content"])
+        else:
+            st.chat_message("assistant").markdown(msg["content"])
