@@ -1,4 +1,7 @@
 import streamlit as st
+
+st.set_page_config(page_title="NeuroAIHub: Neuroradiology Imaging Dataset Finder", layout="wide")
+
 import pandas as pd
 import re
 import os
@@ -10,14 +13,13 @@ from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain.docstore.document import Document
 
+# --- API Key Setup ---
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
- 
-# Check if the API key is loaded correctly
 if not OPENAI_API_KEY:
-    st.error("API key not found. Please make sure your GitHub Secrets are configured properly.")
-    
-# ------------------ Load Data ------------------
+    st.warning("⚠️ API key not found. Please set OPENAI_API_KEY in Streamlit secrets or environment.")
+    st.stop()
 
+# --- Load Data ---
 @st.cache_resource
 def load_data():
     sheets = ['Neurodegenerative', 'Neoplasm', 'Cerebrovascular', 'Psychiatric', 'Spinal', 'Neurodevelopmental']
@@ -34,38 +36,28 @@ dataframes, sheets = load_data()
 vectorstore = load_vectorstore()
 retriever = vectorstore.as_retriever()
 
-# ------------------ LLM Setup ------------------
-
+# --- LLM Setup ---
 class ChatOpenRouter(ChatOpenAI):
     def __init__(self, **kwargs):
         super().__init__(
             base_url="https://openrouter.ai/api/v1",
-            openai_api_key= OPENAI_API_KEY,
+            openai_api_key=OPENAI_API_KEY,
             **kwargs
         )
 
 llm = ChatOpenRouter(model_name="meta-llama/llama-3.3-8b-instruct:free")
 
 template = """
-You are a helpful assistant for querying a neuroradiology dataset. 
-You have access to datasets from six categories:
-Neurodegenerative, Neoplasm, Cerebrovascular, Psychiatric, Spinal, Neurodevelopmental.
-
-Based on the following question and the retrieved context:
-- Identify which datasets are relevant
-- Summarize the dataset names, diseases, and modalities
-
+You are a helpful assistant for querying a neuroradiology dataset...
 Question: {question}
 Context: {context}
-
 Answer:
 """
 
 PROMPT = PromptTemplate(template=template, input_variables=["question", "context"])
 qa_chain = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever, chain_type_kwargs={"prompt": PROMPT})
 
-# ------------------ Dataset Matching ------------------
-
+# --- Dataset Matching ---
 def find_datasets(query):
     docs = retriever.get_relevant_documents(query)
     results = []
@@ -93,11 +85,9 @@ def format_results(dataset_info):
     df = df[cols]
     return tabulate(df, headers='keys', tablefmt='fancy_grid', showindex=False)
 
-# ------------------ Streamlit UI ------------------
-
-st.set_page_config(page_title="NeuroAIHub: Neuroradiology Imaging Dataset Finder", layout="wide")
+# --- Streamlit UI ---
 st.title("🧠 Explore a rich database of neuroradiology imaging datasets.")
-st.markdown("Hello! I'm NeuroAIHub, your assistant for exploring neuroradiology datasets. Ask me anything about datasets and their characterizations")
+st.markdown("Hello! I'm NeuroAIHub, your assistant for exploring neuroradiology datasets. Ask me anything!")
 
 query = st.text_input("💬 Your Question:", placeholder="e.g., Show me datasets about Parkinson's disease")
 
