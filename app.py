@@ -347,8 +347,8 @@ def process_query(query):
 # --- Streamlit UI ---
 
 st.set_page_config(page_title="NeuroAIHub: Neuroradiology Imaging Dataset Finder", layout="wide")
-st.title("🧠 Explore a rich database of neuroradiology imaging datasets.")
-st.markdown("Hello! I'm NeuroAIHub, your assistant for exploring neuroradiology datasets. Ask me anything!")
+st.title("🧠 "NeuroAIHub: Neuroradiology Imaging Dataset Finder")
+st.markdown("Hello! I'm NeuroAIHub, your assistant for exploring neuroradiology datasets. Ask me anything about datassets and theri characterization!")
 
 query = st.text_input("💬 Your Question:", placeholder="e.g., Show me datasets about Parkinson's disease")
 
