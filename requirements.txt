@@ -9,3 +9,4 @@ faiss-cpu
 tabulate
 huggingface-hub
 pydantic
+sentence-transformers
