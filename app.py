@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import re
+import os
 from tabulate import tabulate
 from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
@@ -94,9 +95,9 @@ def format_results(dataset_info):
 
 # ------------------ Streamlit UI ------------------
 
-st.set_page_config(page_title="NeuroAIHub Dataset Assistant", layout="wide")
-st.title("🧠 NeuroAIHub Dataset Assistant")
-st.markdown("Ask any question about neuroradiology datasets and their characterization:")
+st.set_page_config(page_title="NeuroAIHub: Neuroradiology Imaging Dataset Finder", layout="wide")
+st.title("🧠 Explore a rich database of neuroradiology imaging datasets.")
+st.markdown("Hello! I'm NeuroAIHub, your assistant for exploring neuroradiology datasets. Ask me anything about datasets and their characterizations")
 
 query = st.text_input("💬 Your Question:", placeholder="e.g., Show me datasets about Parkinson's disease")
 
