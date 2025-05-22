@@ -344,20 +344,32 @@ def process_query(query):
     
     return text_response, table_response
 
-# --- Streamlit UI ---
 
-st.set_page_config(page_title="NeuroAIHub: Neuroradiology Imaging Dataset Finder", layout="wide")
-st.title("🧠 NeuroAIHub: Neuroradiology Imaging Dataset Finder")
-st.markdown("Hello! I'm NeuroAIHub, your assistant for exploring neuroradiology datasets. Ask me anything about datassets and theri characterization!")
+# --- Streamlit Chat UI ---
 
-query = st.text_input("💬 Your Question:", placeholder="e.g., Show me datasets about Parkinson's disease")
+st.set_page_config(page_title="NeuroAIHub Chat", layout="wide")
+st.title("🧠 NeuroAIHub: Neuroradiology Imaging Dataset Chat")
 
-if query:
-    with st.spinner("🔍 Searching..."):
-        text_response, table_response = process_query(query)
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = [
+        {"role": "assistant", "content": "Hello! I'm NeuroAIHub, your assistant for exploring neuroradiology datasets. Ask me anything!"}
+    ]
 
-    st.subheader("🧾 Answer:")
-    st.write(text_response)
+# Display chat history
+for msg in st.session_state.chat_history:
+    if msg["role"] == "user":
+        st.chat_message("user").markdown(msg["content"])
+    else:
+        st.chat_message("assistant").markdown(msg["content"])
 
-    st.subheader("📊 Relevant Datasets:")
-    st.code(table_response)
+# User input in chat box
+if prompt := st.chat_input("💬 Ask about neuroradiology datasets and their characterizations:"):
+    st.session_state.chat_history.append({"role": "user", "content": prompt})
+
+    with st.chat_message("assistant"):
+        with st.spinner("🔍 Searching..."):
+            answer_text, answer_table = process_query(prompt)
+            full_response = f"{answer_text}\n\n**Relevant Datasets:**\n```\n{answer_table}\n```"
+
+        st.markdown(full_response)
+        st.session_state.chat_history.append({"role": "assistant", "content": full_response})
