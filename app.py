@@ -1,7 +1,8 @@
 import streamlit as st
-
-st.set_page_config(page_title="NeuroAIHub: Neuroradiology Imaging Dataset Finder", layout="wide")
-
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
+from dotenv import load_dotenv
+load_dotenv()
 import pandas as pd
 import re
 import os
@@ -86,6 +87,7 @@ def format_results(dataset_info):
     return tabulate(df, headers='keys', tablefmt='fancy_grid', showindex=False)
 
 # --- Streamlit UI ---
+st.set_page_config(page_title="NeuroAIHub: Neuroradiology Imaging Dataset Finder", layout="wide")
 st.title("🧠 Explore a rich database of neuroradiology imaging datasets.")
 st.markdown("Hello! I'm NeuroAIHub, your assistant for exploring neuroradiology datasets. Ask me anything!")
 
