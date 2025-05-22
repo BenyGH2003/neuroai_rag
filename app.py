@@ -9,6 +9,12 @@ from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain.docstore.document import Document
 
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+ 
+# Check if the API key is loaded correctly
+if not OPENAI_API_KEY:
+    st.error("API key not found. Please make sure your GitHub Secrets are configured properly.")
+    
 # ------------------ Load Data ------------------
 
 @st.cache_resource
@@ -33,7 +39,7 @@ class ChatOpenRouter(ChatOpenAI):
     def __init__(self, **kwargs):
         super().__init__(
             base_url="https://openrouter.ai/api/v1",
-            openai_api_key='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',
+            openai_api_key= OPENAI_API_KEY,
             **kwargs
         )
 
