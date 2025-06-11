@@ -351,31 +351,6 @@ for msg in st.session_state.chat_history:
         if msg.get("sub_content"):
             st.caption(msg["sub_content"])
 
-# --- Display Sample Questions (only if chat is new) ---
-if len(st.session_state.chat_history) == 1:
-    st.subheader("For example, you can ask:")
-    cols = st.columns(3)
-    sample_questions = [
-        "Tell me about the Spinal category",
-        "Which datasets have information on Alzheimer's?",
-        "Show me glioma datasets"
-    ]
-    
-    # Use session state to track which button was clicked
-    if "user_input" not in st.session_state:
-        st.session_state.user_input = ""
-
-    def set_user_input(question):
-        st.session_state.user_input = question
-
-    with cols[0]:
-        st.button(sample_questions[0], on_click=set_user_input, args=(sample_questions[0],), use_container_width=True)
-    with cols[1]:
-        st.button(sample_questions[1], on_click=set_user_input, args=(sample_questions[1],), use_container_width=True)
-    with cols[2]:
-        st.button(sample_questions[2], on_click=set_user_input, args=(sample_questions[2],), use_container_width=True)
-
-
 # --- Handle User Input ---
 # Check for input from chat box OR from a clicked button
 user_input = st.chat_input("💬 Ask about neuroradiology datasets...") or st.session_state.get("user_input", "")
