@@ -25,7 +25,7 @@ if not OPENAI_API_KEY:
 @st.cache_resource
 def load_data():
     sheets = ['Neurodegenerative', 'Neoplasm', 'Cerebrovascular', 'Psychiatric', 'Spinal', 'Neurodevelopmental']
-    file_path = 'dataset.xlsx'
+    file_path = 'neuroradiology_datasets.xlsx'
     dataframes = {sheet: pd.read_excel(file_path, sheet_name=sheet) for sheet in sheets}
     return dataframes, sheets
 
@@ -231,72 +231,61 @@ def is_category_query(query):
     
     return None
 
-def get_category_overview(category):
-    """Generate an overview of datasets in a specific category"""
-    # Get the dataframe for this category
-    df = dataframes[category]
-    
-    # Count number of datasets
-    dataset_count = len(df)
-    
-    # Get list of diseases covered
-    diseases = df['disease'].dropna().unique()
-    disease_list = ", ".join(str(d) for d in diseases if str(d) != 'nan')
-    
-    # Get common modalities
-    modalities = df['modality'].dropna().unique()
-    modality_list = ", ".join(str(m) for m in modalities if str(m) != 'nan')
-    
-    # Calculate average number of subjects
-    try:
-        avg_subjects = df['subject_no_f'].dropna().astype(float).mean()
-        avg_subjects_str = f"{avg_subjects:.1f}"
-    except:
-        avg_subjects_str = "varies"
-    
-    # Years range
-    try:
-        years = df['year'].dropna().astype(int)
-        year_range = f"{years.min()}-{years.max()}" if not years.empty else "various years"
-    except:
-        year_range = "various years"
-    
-    # Create overview text
-    overview = f"""
-The {category} category contains {dataset_count} datasets focusing on {category.lower()} conditions and related neurological aspects.
-
-Disease focus: {disease_list}
-
-These datasets primarily use {modality_list} imaging modalities, with an average of {avg_subjects_str} subjects per dataset, collected during {year_range}.
-
-Below is the complete list of datasets in this category.
-"""
-    return overview.strip()
-
 def process_query(query):
     """Process the user query and return both a text response and dataset table"""
     # Check if this is a general category query
     category = is_category_query(query)
-    
+
     if category:
-        # Generate a general overview of the category
-        text_response = get_category_overview(category)
-        
-        # Get all datasets in this category for the table
-        mentioned_datasets = []
+        # --- HYBRID AGENT/CODE SUMMARY LOGIC ---
+
+        # 1. Get the dataframe and datasets for the table
         df = dataframes[category]
+        mentioned_datasets = []
         for index, row in df.iterrows():
             mentioned_datasets.append((category, row))
         
-        # Format the table with all datasets in the category
-        table_response = format_table(mentioned_datasets, query)
+        # 2. Count the total datasets accurately using code (CHANGED)
+        dataset_count = len(df)
+
+        # 3. Prepare the data as a string for the agent to analyze
+        data_for_agent = df[['disease', 'modality', 'year']].to_string(index=False)
+
+        # 4. Create the special prompt, now INCLUDING the correct count (CHANGED)
+        summary_prompt = f"""
+You are an expert data analyst. You have been given the following data for neuroradiology datasets in the '{category}' category.
+The total number of datasets is exactly {dataset_count}.
+
+--- DATA START ---
+{data_for_agent}
+--- DATA END ---
+
+Your task is to provide a concise, one-paragraph summary based ONLY on the data provided.
+The summary must strictly follow this template, using the provided dataset count:
+
+"The {category} category contains {dataset_count} datasets. They primarily focus on conditions like [list the 4 most common diseases found in the data], using modalities such as [list the 2 most common modalities found in the data], with data published between [the minimum year] and [the maximum year]."
+
+Analyze the data to find the top 4 diseases, top 2 modalities, and the year range, and then construct the summary using the exact count of {dataset_count}.
+"""
+
+        # 5. Send the data and instructions to the agent
+        text_response = llm.invoke(summary_prompt).content
         
+        # Add the closing line
+        text_response += "\n\nBelow is the complete list of datasets in this category."
+
+        # 6. Format the table
+        table_response = format_table(mentioned_datasets, query)
+
         return text_response, table_response
+
+    # --- For non-category queries, the logic remains the same ---
     
-    # For non-category queries, proceed with the existing logic
+    # (The rest of the function remains unchanged)
+    # ...
     # Always get text response from RAG
     text_response = qa_chain.run(query)
-    
+
     # Find all datasets mentioned in the text response
     mentioned_datasets = []
     
@@ -305,43 +294,34 @@ def process_query(query):
     for sheet_name, df in dataframes.items():
         for index, row in df.iterrows():
             all_datasets.append((sheet_name, row))
-    
+
     # Extract dataset names and diseases mentioned in the text response
     for sheet_name, row in all_datasets:
         dataset_name = str(row.get('dataset_name', ''))
         disease = str(row.get('disease', ''))
-        
-        # Check if this dataset name is explicitly mentioned in the text response
+
         if dataset_name and dataset_name in text_response:
             mentioned_datasets.append((sheet_name, row))
-        # Also check if the disease is mentioned along with identifying context
         elif disease and disease in text_response:
-            # Look for more specific mentions to avoid false positives
             context_terms = [sheet_name, str(row.get('modality', '')), str(row.get('institution', ''))]
             for term in context_terms:
                 if term and term in text_response:
                     mentioned_datasets.append((sheet_name, row))
                     break
-    
-    # If no datasets were explicitly mentioned, fall back to the regular search
+
     if not mentioned_datasets:
-        # Find relevant datasets based on the query
         dataset_info = find_relevant_datasets(query)
-        # Extract dataset names to look for in the response
         for sheet_name, row in dataset_info:
             dataset_name = str(row.get('dataset_name', ''))
             if dataset_name and dataset_name in text_response:
                 mentioned_datasets.append((sheet_name, row))
-    
-    # If still no datasets found, just show a limited selection from query results
+
     if not mentioned_datasets:
         dataset_info = find_relevant_datasets(query)
-        # Limit to max 5 datasets to avoid overwhelming the user
         mentioned_datasets = dataset_info[:min(5, len(dataset_info))]
-    
-    # Format the table with only the mentioned datasets
+
     table_response = format_table(mentioned_datasets, query)
-    
+
     return text_response, table_response
 
 
