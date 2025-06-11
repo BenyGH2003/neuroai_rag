@@ -358,7 +358,7 @@ if len(st.session_state.chat_history) == 1:
     sample_questions = [
         "Tell me about the Spinal category",
         "Which datasets have information on Alzheimer's?",
-        "Show me datasets that use CT scans for neoplasms"
+        "Show me glioma datasets"
     ]
     
     # Use session state to track which button was clicked
