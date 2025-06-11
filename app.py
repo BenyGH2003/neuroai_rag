@@ -324,47 +324,83 @@ Analyze the data to find the top 4 diseases, top 2 modalities, and the year rang
 
     return text_response, table_response
 
-
 # --- Streamlit Chat UI ---
 
-# --- Streamlit Chat UI ---
+import streamlit as st
 
 st.set_page_config(page_title="NeuroAIHub Chat", layout="wide")
 st.title("🧠 NeuroAIHub: Neuroradiology Imaging Dataset Finder")
 
+# Define the detailed introductory message
+intro_message = """
+Hello! I am NeuroAIHub. I can provide detailed information on neuroradiology datasets across several categories, including **Neurodegenerative, Neoplasm, Cerebrovascular, Psychiatric, Spinal, and Neurodevelopmental.**
+"""
+sub_intro = "How can I help you explore the data today? You can ask for a category overview or search for specific datasets based on your needs."
+
+# Initialize chat history with the new, detailed introduction
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
-        {"role": "assistant", "content": "Hello! I'm NeuroAIHub, your assistant for exploring neuroradiology datasets. Ask me anything about datasets and their characterizations!"}
+        {"role": "assistant", "content": intro_message, "sub_content": sub_intro}
     ]
 
-# Chat input
-user_input = st.chat_input("💬 Ask about neuroradiology datasets and their characterizations:")
+# Display existing chat history
+for msg in st.session_state.chat_history:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
+        # Display sub_content only for the very first assistant message
+        if msg.get("sub_content"):
+            st.caption(msg["sub_content"])
+
+# --- Display Sample Questions (only if chat is new) ---
+if len(st.session_state.chat_history) == 1:
+    st.subheader("For example, you can ask:")
+    cols = st.columns(3)
+    sample_questions = [
+        "Tell me about the Spinal category",
+        "Which datasets have information on Alzheimer's?",
+        "Show me datasets that use CT scans for neoplasms"
+    ]
+    
+    # Use session state to track which button was clicked
+    if "user_input" not in st.session_state:
+        st.session_state.user_input = ""
+
+    def set_user_input(question):
+        st.session_state.user_input = question
+
+    with cols[0]:
+        st.button(sample_questions[0], on_click=set_user_input, args=(sample_questions[0],), use_container_width=True)
+    with cols[1]:
+        st.button(sample_questions[1], on_click=set_user_input, args=(sample_questions[1],), use_container_width=True)
+    with cols[2]:
+        st.button(sample_questions[2], on_click=set_user_input, args=(sample_questions[2],), use_container_width=True)
+
+
+# --- Handle User Input ---
+# Check for input from chat box OR from a clicked button
+user_input = st.chat_input("💬 Ask about neuroradiology datasets...") or st.session_state.get("user_input", "")
 
 if user_input:
-    # Append user message immediately so it shows in chat history
+    # Clear the button-clicked state
+    st.session_state.user_input = ""
+    
+    # Add user message to history and display it
     st.session_state.chat_history.append({"role": "user", "content": user_input})
+    with st.chat_message("user"):
+        st.markdown(user_input)
 
-    # Render all chat messages including the new user message
-    for msg in st.session_state.chat_history:
-        if msg["role"] == "user":
-            st.chat_message("user").markdown(msg["content"])
-        else:
-            st.chat_message("assistant").markdown(msg["content"])
-
-    # Generate assistant response
+    # Generate and display assistant response
     with st.chat_message("assistant"):
         with st.spinner("🔍 Searching..."):
             answer_text, answer_table = process_query(user_input)
+            
+            # Nicer formatting for the table using Markdown code block
             full_response = f"{answer_text}\n\n**Relevant Datasets:**\n```\n{answer_table}\n```"
-
-        st.markdown(full_response)
-        # Append assistant response to chat history
-        st.session_state.chat_history.append({"role": "assistant", "content": full_response})
-
-else:
-    # No new user input, just render existing chat history
-    for msg in st.session_state.chat_history:
-        if msg["role"] == "user":
-            st.chat_message("user").markdown(msg["content"])
-        else:
-            st.chat_message("assistant").markdown(msg["content"])
+            
+            st.markdown(full_response)
+            
+            # Add assistant response to history
+            st.session_state.chat_history.append({"role": "assistant", "content": full_response})
+    
+    # Rerun to clear the buttons and show the new chat
+    st.rerun()
