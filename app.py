@@ -47,7 +47,7 @@ class ChatOpenRouter(ChatOpenAI):
             **kwargs
         )
 
-llm = ChatOpenRouter(model_name="meta-llama/llama-3.3-8b-instruct:free")
+llm = ChatOpenRouter(model_name="meta-llama/llama-3.3-70b-instruct")
 
 template = """
 You are a helpful assistant for querying a neuroradiology dataset. 
